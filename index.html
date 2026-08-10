@@ -336,6 +336,36 @@
       line-height: 1.5;
     }
 
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-title-row h2 {
+      margin: 0;
+    }
+
+    .secondary-button {
+      appearance: none;
+      border: 1px solid #727b73;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      padding: 7px 10px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .secondary-button:active {
+      background: var(--accent-soft);
+    }
+
     .heading-controls {
       display: grid;
       gap: 14px;
@@ -476,7 +506,10 @@
       </section>
 
       <section class="card">
-        <h2>标题官方映射</h2>
+        <div class="card-title-row">
+          <h2>标题官方映射</h2>
+          <button class="secondary-button" id="resetHeadingRules" type="button">恢复默认</button>
+        </div>
         <p class="rule-note">以下映射规则和倍数按产品定义应由文石官方固定，正式阅读设置中不支持用户修改。本 demo 暂时开放倍数调节，仅用于测试不同参数的阅读效果。</p>
         <div class="metric-table" id="headingTable"></div>
         <div class="heading-controls" id="headingControls"></div>
@@ -499,15 +532,17 @@
     const pageMarginOut = document.getElementById("pageMarginOut");
     const headingTable = document.getElementById("headingTable");
     const headingControls = document.getElementById("headingControls");
+    const resetHeadingRules = document.getElementById("resetHeadingRules");
     const indentButtons = Array.from(document.querySelectorAll("[data-indent]"));
     const headingAlignButtons = Array.from(document.querySelectorAll("[data-heading-align]"));
 
-    const headingRules = {
+    const defaultHeadingRules = {
       h1: { scale: 1.45, lineGap: 0.16, before: 0.80, after: 1.10 },
       h2: { scale: 1.30, lineGap: 0.18, before: 0.65, after: 0.95 },
       h3: { scale: 1.18, lineGap: 0.20, before: 0.55, after: 0.75 },
       h4: { scale: 1.10, lineGap: 0.22, before: 0.45, after: 0.60 }
     };
+    const headingRules = JSON.parse(JSON.stringify(defaultHeadingRules));
 
     let textIndent = 0;
     let headingAlign = "center";
@@ -826,6 +861,14 @@
         headingAlignButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
         update();
       });
+    });
+
+    resetHeadingRules.addEventListener("click", () => {
+      Object.entries(defaultHeadingRules).forEach(([level, defaults]) => {
+        Object.assign(headingRules[level], defaults);
+      });
+      renderHeadingControls();
+      update();
     });
 
     prevPage.addEventListener("click", () => {
