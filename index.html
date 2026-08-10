@@ -24,28 +24,30 @@
 
     body {
       margin: 0;
-      min-height: 100vh;
+      height: 100vh;
       background: var(--bg);
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      overflow: hidden;
     }
 
     .app {
-      min-height: 100vh;
+      height: 100vh;
       display: grid;
-      grid-template-columns: minmax(560px, 1fr) minmax(420px, 520px);
+      grid-template-columns: minmax(480px, 1fr) minmax(430px, 500px);
+      overflow: hidden;
     }
 
     .preview-pane {
       display: grid;
       place-items: center;
-      padding: 28px;
+      padding: 14px;
       background:
         linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
         linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
         var(--bg);
       background-size: 28px 28px;
-      overflow: auto;
+      overflow: hidden;
     }
 
     .device-shell {
@@ -63,6 +65,8 @@
       grid-template-columns: 54px 560px 54px;
       gap: 14px;
       align-items: center;
+      transform: scale(var(--preview-scale, 0.78));
+      transform-origin: center;
     }
 
     .page-button {
@@ -212,16 +216,17 @@
     .settings-pane {
       display: grid;
       align-content: start;
-      gap: 16px;
-      padding: 26px;
+      gap: 10px;
+      height: 100vh;
+      padding: 14px;
       background: var(--panel);
       border-left: 1px solid var(--line);
       overflow: auto;
     }
 
     header h1 {
-      margin: 0 0 8px;
-      font-size: 24px;
+      margin: 0;
+      font-size: 20px;
       line-height: 1.25;
     }
 
@@ -235,23 +240,24 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.38);
-      padding: 16px;
+      padding: 10px;
     }
 
     .card h2 {
-      margin: 0 0 12px;
-      font-size: 16px;
+      margin: 0 0 8px;
+      font-size: 15px;
       line-height: 1.35;
     }
 
     .fields {
       display: grid;
-      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 12px;
     }
 
     .field {
       display: grid;
-      gap: 8px;
+      gap: 5px;
     }
 
     .field label {
@@ -259,7 +265,8 @@
       justify-content: space-between;
       gap: 12px;
       font-weight: 700;
-      line-height: 1.3;
+      line-height: 1.25;
+      font-size: 13px;
     }
 
     output {
@@ -275,7 +282,7 @@
     .mode {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      gap: 6px;
     }
 
     .mode button {
@@ -284,8 +291,9 @@
       border-radius: 8px;
       background: transparent;
       color: var(--ink);
-      padding: 9px 10px;
+      padding: 7px 8px;
       font: inherit;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
     }
@@ -314,10 +322,11 @@
 
     .metric-row span {
       min-width: 0;
-      padding: 8px;
+      padding: 6px;
       background: rgba(255, 255, 255, 0.43);
       color: var(--muted);
-      line-height: 1.35;
+      line-height: 1.3;
+      font-size: 13px;
     }
 
     .metric-row.is-head span,
@@ -331,9 +340,10 @@
     }
 
     .rule-note {
-      margin: 0 0 14px;
+      margin: 0 0 10px;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.45;
+      font-size: 13px;
     }
 
     .card-title-row {
@@ -341,7 +351,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .card-title-row h2 {
@@ -368,14 +378,14 @@
 
     .heading-controls {
       display: grid;
-      gap: 14px;
-      margin-top: 14px;
+      gap: 10px;
+      margin-top: 10px;
     }
 
     .heading-control {
       display: grid;
-      gap: 10px;
-      padding-top: 14px;
+      gap: 7px;
+      padding-top: 10px;
       border-top: 1px solid var(--line);
     }
 
@@ -384,18 +394,19 @@
       justify-content: space-between;
       gap: 12px;
       font-weight: 700;
-      line-height: 1.3;
+      line-height: 1.25;
+      font-size: 13px;
     }
 
     .mini-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px 12px;
+      gap: 7px 10px;
     }
 
     .mini-field {
       display: grid;
-      gap: 6px;
+      gap: 4px;
     }
 
     .mini-field label {
@@ -403,16 +414,16 @@
       justify-content: space-between;
       gap: 8px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       line-height: 1.3;
     }
 
     .formula-note {
       color: var(--muted);
-      line-height: 1.45;
+      line-height: 1.35;
       font-variant-numeric: tabular-nums;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .page-meta {
@@ -421,15 +432,35 @@
       line-height: 1.4;
       font-variant-numeric: tabular-nums;
       text-align: center;
-      margin-top: 10px;
+      margin-top: 8px;
+    }
+
+    @media (min-height: 900px) {
+      .reader-wrap {
+        --preview-scale: 0.90;
+      }
+    }
+
+    @media (max-height: 760px) {
+      .reader-wrap {
+        --preview-scale: 0.70;
+      }
     }
 
     @media (max-width: 1080px) {
+      body {
+        height: auto;
+        overflow: auto;
+      }
+
       .app {
         grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
       }
 
       .settings-pane {
+        height: auto;
         border-left: 0;
         border-top: 1px solid var(--line);
       }
