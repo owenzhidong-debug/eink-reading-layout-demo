@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>4寸墨水屏统一排版规则体验 Demo</title>
+  <style>
+    :root {
+      --bg: #e7e8e1;
+      --panel: #f5f5ef;
+      --ink: #202420;
+      --muted: #687167;
+      --line: #c5c9c0;
+      --screen: #dfe2d8;
+      --accent: #355f4d;
+      --accent-soft: #d9e5dc;
+      --paper-line: rgba(32, 36, 32, 0.035);
+      --shadow: rgba(23, 28, 24, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(560px, 1fr) minmax(420px, 520px);
+    }
+
+    .preview-pane {
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        var(--bg);
+      background-size: 28px 28px;
+      overflow: auto;
+    }
+
+    .device-shell {
+      width: 560px;
+      padding: 30px 40px 74px;
+      border: 2px solid #a6ada4;
+      border-radius: 34px;
+      background: #cfd5ce;
+      box-shadow: 0 20px 56px var(--shadow);
+      position: relative;
+    }
+
+    .reader-wrap {
+      display: grid;
+      grid-template-columns: 54px 560px 54px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .page-button {
+      width: 48px;
+      height: 96px;
+      border: 1px solid #818980;
+      border-radius: 8px;
+      background: rgba(245, 245, 239, 0.62);
+      color: #273027;
+      font-size: 28px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(23, 28, 24, 0.10);
+    }
+
+    .page-button:disabled {
+      cursor: default;
+      opacity: 0.35;
+    }
+
+    .device-shell::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 26px;
+      width: 86px;
+      height: 14px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #b9c1b8;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    }
+
+    .screen {
+      position: relative;
+      width: 480px;
+      height: 800px;
+      overflow: hidden;
+      border: 2px solid #4f554f;
+      border-radius: 10px;
+      background:
+        repeating-linear-gradient(0deg, var(--paper-line), var(--paper-line) 1px, transparent 1px, transparent 4px),
+        var(--screen);
+      box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.18);
+    }
+
+    .reader-page {
+      position: absolute;
+      inset: 0;
+      padding: var(--margin-top) var(--margin-right) calc(var(--margin-bottom) + 30px) var(--margin-left);
+      color: #242824;
+      overflow: hidden;
+    }
+
+    .reader-page h1,
+    .reader-page h2,
+    .reader-page h3,
+    .reader-page h4,
+    .reader-page p {
+      padding: 0;
+      letter-spacing: 0;
+    }
+
+    .reader-page h1,
+    .reader-page h2,
+    .reader-page h3,
+    .reader-page h4 {
+      text-align: var(--heading-align);
+      font-weight: 700;
+    }
+
+    .reader-page h1 {
+      margin: var(--h1-before) 0 var(--h1-after);
+      font-size: var(--h1-size);
+      line-height: var(--h1-line-height);
+    }
+
+    .reader-page h2 {
+      margin: var(--h2-before) 0 var(--h2-after);
+      font-size: var(--h2-size);
+      line-height: var(--h2-line-height);
+    }
+
+    .reader-page h3 {
+      margin: var(--h3-before) 0 var(--h3-after);
+      font-size: var(--h3-size);
+      line-height: var(--h3-line-height);
+    }
+
+    .reader-page h4 {
+      margin: var(--h4-before) 0 var(--h4-after);
+      font-size: var(--h4-size);
+      line-height: var(--h4-line-height);
+    }
+
+    .reader-page p {
+      margin: 0 0 var(--paragraph-after);
+      font-size: var(--body-size);
+      line-height: var(--body-line-height);
+      text-indent: var(--text-indent);
+      text-align: justify;
+      font-weight: 500;
+    }
+
+    .status {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(75, 82, 76, 0.25);
+      padding-top: 6px;
+      color: #2e332f;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .battery {
+      width: 22px;
+      height: 11px;
+      border: 1.5px solid #2e332f;
+      position: relative;
+    }
+
+    .battery::before {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 2px;
+      height: 4px;
+      background: #2e332f;
+    }
+
+    .battery::after {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 12px;
+      height: 5px;
+      background: #2e332f;
+    }
+
+    .settings-pane {
+      display: grid;
+      align-content: start;
+      gap: 16px;
+      padding: 26px;
+      background: var(--panel);
+      border-left: 1px solid var(--line);
+      overflow: auto;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.38);
+      padding: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .fields {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    output {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .mode {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .mode button {
+      appearance: none;
+      border: 1px solid #727b73;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      padding: 9px 10px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mode button[aria-pressed="true"] {
+      background: var(--ink);
+      color: var(--panel);
+    }
+
+    .metric-table {
+      display: grid;
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--line);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 48px repeat(4, minmax(70px, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .metric-row span {
+      min-width: 0;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.43);
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .metric-row.is-head span,
+    .metric-row .level {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .metric-row.is-head span {
+      background: var(--accent-soft);
+    }
+
+    .rule-note {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .heading-controls {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .heading-control {
+      display: grid;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .heading-control-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 12px;
+    }
+
+    .mini-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mini-field label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .formula-note {
+      color: var(--muted);
+      line-height: 1.45;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+    }
+
+    .page-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 1080px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .settings-pane {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .reader-wrap {
+        grid-template-columns: 44px 560px 44px;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="preview-pane" aria-label="480乘800墨水屏预览">
+      <div>
+        <div class="reader-wrap">
+          <button class="page-button" id="prevPage" type="button" aria-label="上一页">‹</button>
+          <div class="device-shell">
+            <div class="screen">
+              <article class="reader-page" id="readerPage"></article>
+            </div>
+          </div>
+          <button class="page-button" id="nextPage" type="button" aria-label="下一页">›</button>
+        </div>
+        <div class="page-meta" id="pageMeta"></div>
+      </div>
+    </section>
+
+    <section class="settings-pane" aria-label="规则与参数设置">
+      <header>
+        <h1>统一排版体验 Demo</h1>
+      </header>
+
+      <section class="card">
+        <h2>用户可调参数</h2>
+        <div class="fields">
+          <div class="field">
+            <label for="fontSize">正文字号 <output id="fontSizeOut">21px</output></label>
+            <input id="fontSize" type="range" min="14" max="24" value="21" step="1">
+            <div class="formula-note" id="fontSizeFormula"></div>
+          </div>
+          <div class="field">
+            <label for="lineGap">正文行间距 a <output id="lineGapOut">0.30</output></label>
+            <input id="lineGap" type="range" min="0.20" max="0.60" value="0.30" step="0.05">
+            <div class="formula-note" id="bodyLineFormula"></div>
+          </div>
+          <div class="field">
+            <label for="paragraphGap">正文段间距 b <output id="paragraphGapOut">0.30</output></label>
+            <input id="paragraphGap" type="range" min="0" max="0.80" value="0.30" step="0.05">
+            <div class="formula-note" id="bodyGapFormula"></div>
+          </div>
+          <div class="field">
+            <label for="pageMargin">左右页边距 <output id="pageMarginOut">0.50em</output></label>
+            <input id="pageMargin" type="range" min="0.30" max="0.90" value="0.50" step="0.05">
+            <div class="formula-note" id="pageMarginFormula"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>正文首行缩进</h2>
+        <div class="mode" role="group" aria-label="正文首行缩进">
+          <button type="button" data-indent="0" aria-pressed="true">无缩进</button>
+          <button type="button" data-indent="2" aria-pressed="false">2em 缩进</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>标题对齐</h2>
+        <div class="mode" role="group" aria-label="标题对齐">
+          <button type="button" data-heading-align="center" aria-pressed="true">居中</button>
+          <button type="button" data-heading-align="left" aria-pressed="false">靠左</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>标题官方映射</h2>
+        <p class="rule-note">以下映射规则和倍数按产品定义应由文石官方固定，正式阅读设置中不支持用户修改。本 demo 暂时开放倍数调节，仅用于测试不同参数的阅读效果。</p>
+        <div class="metric-table" id="headingTable"></div>
+        <div class="heading-controls" id="headingControls"></div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const page = document.getElementById("readerPage");
+    const prevPage = document.getElementById("prevPage");
+    const nextPage = document.getElementById("nextPage");
+    const pageMeta = document.getElementById("pageMeta");
+    const fontSize = document.getElementById("fontSize");
+    const lineGap = document.getElementById("lineGap");
+    const paragraphGap = document.getElementById("paragraphGap");
+    const pageMargin = document.getElementById("pageMargin");
+    const fontSizeOut = document.getElementById("fontSizeOut");
+    const lineGapOut = document.getElementById("lineGapOut");
+    const paragraphGapOut = document.getElementById("paragraphGapOut");
+    const pageMarginOut = document.getElementById("pageMarginOut");
+    const headingTable = document.getElementById("headingTable");
+    const headingControls = document.getElementById("headingControls");
+    const indentButtons = Array.from(document.querySelectorAll("[data-indent]"));
+    const headingAlignButtons = Array.from(document.querySelectorAll("[data-heading-align]"));
+
+    const headingRules = {
+      h1: { scale: 1.45, lineGap: 0.16, before: 0.80, after: 1.10 },
+      h2: { scale: 1.30, lineGap: 0.18, before: 0.65, after: 0.95 },
+      h3: { scale: 1.18, lineGap: 0.20, before: 0.55, after: 0.75 },
+      h4: { scale: 1.10, lineGap: 0.22, before: 0.45, after: 0.60 }
+    };
+
+    let textIndent = 0;
+    let headingAlign = "center";
+    let currentPage = 0;
+
+    const bookPages = [
+      `
+        <h1>古文观止选读</h1>
+        <h2>岳阳楼记</h2>
+        <h3>迁客骚人与古仁人之心的分别</h3>
+        <p>庆历四年春，滕子京谪守巴陵郡。越明年，政通人和，百废具兴。乃重修岳阳楼，增其旧制，刻唐贤今人诗赋于其上。属予作文以记之。</p>
+        <p>予观夫巴陵胜状，在洞庭一湖。衔远山，吞长江，浩浩汤汤，横无际涯；朝晖夕阴，气象万千。此则岳阳楼之大观也，前人之述备矣。</p>
+        <p>然则北通巫峡，南极潇湘，迁客骚人，多会于此，览物之情，得无异乎？若夫霪雨霏霏，连月不开，阴风怒号，浊浪排空。</p>
+        <p>日星隐曜，山岳潜形；商旅不行，樯倾楫摧；薄暮冥冥，虎啸猿啼。登斯楼也，则有去国怀乡，忧谗畏讥，满目萧然，感极而悲者矣。</p>
+        <h4>春和景明</h4>
+        <p>至若春和景明，波澜不惊，上下天光，一碧万顷；沙鸥翔集，锦鳞游泳；岸芷汀兰，郁郁青青。</p>
+        <p>而或长烟一空，皓月千里，浮光跃金，静影沉璧；渔歌互答，此乐何极！登斯楼也，则有心旷神怡，宠辱偕忘，把酒临风，其喜洋洋者矣。</p>
+      `,
+      `
+        <h3>先天下之忧而忧后天下之乐而乐</h3>
+        <p>嗟夫！予尝求古仁人之心，或异二者之为。何哉？不以物喜，不以己悲；居庙堂之高则忧其民，处江湖之远则忧其君。</p>
+        <p>是进亦忧，退亦忧。然则何时而乐耶？其必曰：先天下之忧而忧，后天下之乐而乐乎！噫！微斯人，吾谁与归？时六年九月十五日。</p>
+        <p>此文以登楼所见发端，以迁客骚人之情为衬，终归于古仁人之心。前写阴雨，后写晴明，悲喜相对，而不止于景物之工。</p>
+        <p>末章提出忧乐之义，遂使一楼一湖皆有精神。读之者若只赏其句法，而不体其胸怀，则未免失其大旨。</p>
+        <h2>醉翁亭记</h2>
+        <h3>环滁皆山也峰回路转有亭翼然临于泉上者醉翁亭也</h3>
+        <p>环滁皆山也。其西南诸峰，林壑尤美，望之蔚然而深秀者，琅琊也。山行六七里，渐闻水声潺潺，而泻出于两峰之间者，酿泉也。</p>
+        <p>峰回路转，有亭翼然临于泉上者，醉翁亭也。作亭者谁？山之僧智仙也。名之者谁？太守自谓也。</p>
+      `,
+      `
+        <h3>山水之乐得之心而寓之酒也</h3>
+        <p>太守与客来饮于此，饮少辄醉，而年又最高，故自号曰醉翁也。醉翁之意不在酒，在乎山水之间也。山水之乐，得之心而寓之酒也。</p>
+        <p>若夫日出而林霏开，云归而岩穴暝，晦明变化者，山间之朝暮也。野芳发而幽香，佳木秀而繁阴，风霜高洁，水落而石出者，山间之四时也。</p>
+        <p>朝而往，暮而归，四时之景不同，而乐亦无穷也。至于负者歌于途，行者休于树，前者呼，后者应，伛偻提携，往来而不绝者，滁人游也。</p>
+        <p>临溪而渔，溪深而鱼肥；酿泉为酒，泉香而酒洌；山肴野蔌，杂然而前陈者，太守宴也。</p>
+        <h4>众宾欢也太守醉也</h4>
+        <p>宴酣之乐，非丝非竹，射者中，弈者胜，觥筹交错，起坐而喧哗者，众宾欢也。苍颜白发，颓然乎其间者，太守醉也。</p>
+        <p>已而夕阳在山，人影散乱，太守归而宾客从也。树林阴翳，鸣声上下，游人去而禽鸟乐也。</p>
+      `,
+      `
+        <h3>人知从太守游而乐而不知太守之乐其乐也</h3>
+        <p>然而禽鸟知山林之乐，而不知人之乐；人知从太守游而乐，而不知太守之乐其乐也。</p>
+        <p>醉能同其乐，醒能述以文者，太守也。太守谓谁？庐陵欧阳修也。此文首尾回环，以山水起，以宴游承，以与民同乐为归宿。</p>
+        <p>其中短句相接，节奏明快，极适合观察小屏中文排版中的行距、段距和标题换行。若字号偏小，段落会结成灰块；若段距过大，又会削弱连续阅读的节奏。</p>
+        <p>因此本页特意保留较密的正文，并插入不同层级标题，用来检验统一排版规则在真实篇章中的表现。</p>
+        <h2>爱莲说</h2>
+        <p>水陆草木之花，可爱者甚蕃。晋陶渊明独爱菊。自李唐来，世人甚爱牡丹。予独爱莲之出淤泥而不染，濯清涟而不妖。</p>
+        <p>中通外直，不蔓不枝，香远益清，亭亭净植，可远观而不可亵玩焉。</p>
+      `,
+      `
+        <h1>大学章句节读</h1>
+        <h2>经一章：明明德、亲民、止于至善</h2>
+        <p>大学之道，在明明德，在亲民，在止于至善。知止而后有定，定而后能静，静而后能安，安而后能虑，虑而后能得。</p>
+        <p>物有本末，事有终始。知所先后，则近道矣。古之欲明明德于天下者，先治其国；欲治其国者，先齐其家；欲齐其家者，先修其身。</p>
+        <h3>从格物到平天下的次第说明</h3>
+        <p>欲修其身者，先正其心；欲正其心者，先诚其意；欲诚其意者，先致其知；致知在格物。物格而后知至，知至而后意诚，意诚而后心正。</p>
+        <p>所谓诚其意者，毋自欺也。如恶恶臭，如好好色，此之谓自谦。故君子必慎其独也。小人闲居为不善，无所不至，见君子而后厌然。</p>
+        <p>富润屋，德润身，心广体胖。故君子必诚其意。所谓修身在正其心者，身有所忿懥，则不得其正；有所恐惧，则不得其正。</p>
+      `,
+      `
+        <h3>身修而后家齐国治天下平</h3>
+        <p>心正而后身修，身修而后家齐，家齐而后国治，国治而后天下平。自天子以至于庶人，壹是皆以修身为本。</p>
+        <p>其本乱而末治者否矣。其所厚者薄，而其所薄者厚，未之有也。此谓知本，此谓知之至也。</p>
+        <h4>康诰盘铭邦畿诸章所引古义</h4>
+        <p>《康诰》曰：“克明德。”《大甲》曰：“顾諟天之明命。”《帝典》曰：“克明峻德。”皆自明也。汤之盘铭曰：“苟日新，日日新，又日新。”</p>
+        <p>《康诰》曰：“作新民。”《诗》曰：“周虽旧邦，其命维新。”是故君子无所不用其极。所谓止于至善者，非徒知其名而已。</p>
+        <p>为人君止于仁，为人臣止于敬，为人子止于孝，为人父止于慈，与国人交止于信。各随其所处而求当然之则，乃不失其所止。</p>
+        <p>此章承上启下，以明德、新民、止善为纲，而以修身为本。读者若能反求诸身，则纲领条目不为空言。</p>
+      `,
+      `
+        <h2>传之首章：释明明德</h2>
+        <p>《诗》云：“周虽旧邦，其命维新。”是故君子无所不用其极。《诗》云：“邦畿千里，惟民所止。”《诗》云：“缗蛮黄鸟，止于丘隅。”</p>
+        <p>子曰：“于止，知其所止，可以人而不如鸟乎？”《诗》云：“穆穆文王，于缉熙敬止。”为人君，止于仁；为人臣，止于敬；为人子，止于孝。</p>
+        <h3>长标题换行测试：君臣父子与国人交接之间各有所止的义理说明</h3>
+        <p>为人父，止于慈；与国人交，止于信。此数者，皆以所处之位而求其当然之则，不越其分，不失其宜。</p>
+        <p>《诗》云：“瞻彼淇澳，绿竹猗猗。有斐君子，如切如磋，如琢如磨。”如切如磋者，道学也；如琢如磨者，自修也。</p>
+        <p>瑟兮僴兮者，恂栗也；赫兮喧兮者，威仪也。有斐君子，终不可諠兮者，道盛德至善，民之不能忘也。</p>
+        <p>此以文王与君子之德相发明，使人知明德既明，必有可见于容貌辞气之间者，而非独守一念而已。</p>
+      `,
+      `
+        <h2>中庸节读</h2>
+        <h3>天命之谓性率性之谓道修道之谓教</h3>
+        <p>天命之谓性，率性之谓道，修道之谓教。道也者，不可须臾离也；可离，非道也。是故君子戒慎乎其所不睹，恐惧乎其所不闻。</p>
+        <p>莫见乎隐，莫显乎微。故君子慎其独也。喜怒哀乐之未发，谓之中；发而皆中节，谓之和。中也者，天下之大本也；和也者，天下之达道也。</p>
+        <h4>致中和</h4>
+        <p>致中和，天地位焉，万物育焉。仲尼曰：“君子中庸，小人反中庸。君子之中庸也，君子而时中；小人之反中庸也，小人而无忌惮也。”</p>
+        <p>子曰：“中庸其至矣乎！民鲜能久矣。”道之不行也，我知之矣：知者过之，愚者不及也。道之不明也，我知之矣：贤者过之，不肖者不及也。</p>
+        <p>人莫不饮食也，鲜能知味也。道其不行矣夫！子曰：“道不远人。人之为道而远人，不可以为道。”</p>
+        <p>君子之道，费而隐。夫妇之愚，可以与知焉；及其至也，虽圣人亦有所不知焉。夫妇之不肖，可以能行焉；及其至也，虽圣人亦有所不能焉。</p>
+      `,
+      `
+        <h3>道不远人而人之为道远人不可以为道</h3>
+        <p>子曰：“道不远人。人之为道而远人，不可以为道。”《诗》云：“伐柯伐柯，其则不远。”执柯以伐柯，睨而视之，犹以为远。</p>
+        <p>故君子以人治人，改而止。忠恕违道不远，施诸己而不愿，亦勿施于人。君子之道四，丘未能一焉。</p>
+        <p>所求乎子，以事父，未能也；所求乎臣，以事君，未能也；所求乎弟，以事兄，未能也；所求乎朋友，先施之，未能也。</p>
+        <p>庸德之行，庸言之谨，有所不足，不敢不勉；有余，不敢尽。言顾行，行顾言，君子胡不慥慥尔。</p>
+        <p>君子素其位而行，不愿乎其外。素富贵，行乎富贵；素贫贱，行乎贫贱；素夷狄，行乎夷狄；素患难，行乎患难。</p>
+        <p>在上位不陵下，在下位不援上，正己而不求于人，则无怨。上不怨天，下不尤人。故君子居易以俟命，小人行险以徼幸。</p>
+      `,
+      `
+        <h2>论语选读</h2>
+        <h3>学而第一：学、友、信与君子之本</h3>
+        <p>子曰：“学而时习之，不亦说乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？”有子曰：“其为人也孝弟，而好犯上者，鲜矣。”</p>
+        <p>君子务本，本立而道生。孝弟也者，其为仁之本与！子曰：“巧言令色，鲜矣仁。”曾子曰：“吾日三省吾身：为人谋而不忠乎？与朋友交而不信乎？传不习乎？”</p>
+        <h4>礼之用和为贵</h4>
+        <p>有子曰：“礼之用，和为贵。先王之道，斯为美；小大由之。有所不行，知和而和，不以礼节之，亦不可行也。”</p>
+        <p>子曰：“弟子入则孝，出则弟，谨而信，泛爱众，而亲仁。行有余力，则以学文。”子夏曰：“贤贤易色；事父母，能竭其力；事君，能致其身。”</p>
+        <p>朋友交，言而有信。虽曰未学，吾必谓之学矣。子曰：“君子不重则不威，学则不固。主忠信，无友不如己者；过则勿惮改。”</p>
+        <p>曾子曰：“慎终追远，民德归厚矣。”子禽问于子贡曰：“夫子至于是邦也，必闻其政，求之与？抑与之与？”</p>
+      `,
+      `
+        <h3>为政第二：为政以德譬如北辰居其所而众星共之</h3>
+        <p>子曰：“为政以德，譬如北辰，居其所而众星共之。”子曰：“《诗》三百，一言以蔽之，曰：思无邪。”子曰：“道之以政，齐之以刑，民免而无耻。”</p>
+        <p>道之以德，齐之以礼，有耻且格。子曰：“吾十有五而志于学，三十而立，四十而不惑，五十而知天命，六十而耳顺，七十而从心所欲，不逾矩。”</p>
+        <p>孟懿子问孝。子曰：“无违。”樊迟御，子告之曰：“孟孙问孝于我，我对曰，无违。”樊迟曰：“何谓也？”子曰：“生，事之以礼；死，葬之以礼，祭之以礼。”</p>
+        <p>孟武伯问孝。子曰：“父母唯其疾之忧。”子游问孝。子曰：“今之孝者，是谓能养。至于犬马，皆能有养；不敬，何以别乎？”</p>
+        <p>子夏问孝。子曰：“色难。有事，弟子服其劳；有酒食，先生馔，曾是以为孝乎？”子曰：“吾与回言终日，不违，如愚。”</p>
+        <p>退而省其私，亦足以发，回也不愚。子曰：“视其所以，观其所由，察其所安。人焉廋哉？人焉廋哉？”</p>
+      `,
+      `
+        <h2>孟子节读</h2>
+        <h3>梁惠王上：王何必曰利亦有仁义而已矣</h3>
+        <p>孟子见梁惠王。王曰：“叟，不远千里而来，亦将有以利吾国乎？”孟子对曰：“王何必曰利？亦有仁义而已矣。”</p>
+        <p>王曰何以利吾国，大夫曰何以利吾家，士庶人曰何以利吾身，上下交征利而国危矣。万乘之国，弑其君者，必千乘之家；千乘之国，弑其君者，必百乘之家。</p>
+        <h4>仁者无敌</h4>
+        <p>未有仁而遗其亲者也，未有义而后其君者也。王亦曰仁义而已矣，何必曰利？</p>
+        <p>孟子曰：“不违农时，谷不可胜食也；数罟不入洿池，鱼鳖不可胜食也；斧斤以时入山林，材木不可胜用也。”</p>
+        <p>谷与鱼鳖不可胜食，材木不可胜用，是使民养生丧死无憾也。养生丧死无憾，王道之始也。</p>
+        <p>五亩之宅，树之以桑，五十者可以衣帛矣。鸡豚狗彘之畜，无失其时，七十者可以食肉矣。</p>
+      `,
+      `
+        <h3>齐桓晋文之事章中关于保民而王的长标题换行测试</h3>
+        <p>曰：“德何如则可以王矣？”曰：“保民而王，莫之能御也。”曰：“若寡人者，可以保民乎哉？”曰：“可。”曰：“何由知吾可也？”</p>
+        <p>曰：“臣闻之胡龁曰：王坐于堂上，有牵牛而过堂下者。王见之，曰：牛何之？对曰：将以衅钟。王曰：舍之！吾不忍其觳觫，若无罪而就死地。”</p>
+        <p>曰：“然则废衅钟与？”曰：“何可废也？以羊易之。”不识有诸？曰：“有之。”曰：“是心足以王矣。”</p>
+        <p>百姓皆以王为爱也，臣固知王之不忍也。王曰：“然，诚有百姓者。齐国虽褊小，吾何爱一牛？即不忍其觳觫，若无罪而就死地，故以羊易之也。”</p>
+        <p>曰：“王无异于百姓之以王为爱也。以小易大，彼恶知之？王若隐其无罪而就死地，则牛羊何择焉？”王笑曰：“是诚何心哉？”</p>
+        <p>此心之发，足以见恻隐之端。能扩而充之，则四海可保；不能充之，则不足以事父母。</p>
+      `,
+      `
+        <h1>古文观止选读</h1>
+        <h2>岳阳楼记</h2>
+        <h3>迁客骚人与古仁人之心的分别</h3>
+        <p>庆历四年春，滕子京谪守巴陵郡。越明年，政通人和，百废具兴。乃重修岳阳楼，增其旧制，刻唐贤今人诗赋于其上。</p>
+        <p>予观夫巴陵胜状，在洞庭一湖。衔远山，吞长江，浩浩汤汤，横无际涯；朝晖夕阴，气象万千。此则岳阳楼之大观也，前人之述备矣。</p>
+        <p>然则北通巫峡，南极潇湘，迁客骚人，多会于此，览物之情，得无异乎？若夫霪雨霏霏，连月不开，阴风怒号，浊浪排空。</p>
+        <p>日星隐曜，山岳潜形；商旅不行，樯倾楫摧；薄暮冥冥，虎啸猿啼。登斯楼也，则有去国怀乡，忧谗畏讥，满目萧然，感极而悲者矣。</p>
+        <p>至若春和景明，波澜不惊，上下天光，一碧万顷；沙鸥翔集，锦鳞游泳；岸芷汀兰，郁郁青青。</p>
+        <p>而或长烟一空，皓月千里，浮光跃金，静影沉璧。渔歌互答，此乐何极！</p>
+      `,
+      `
+        <h3>先天下之忧而忧后天下之乐而乐</h3>
+        <p>至若春和景明，波澜不惊，上下天光，一碧万顷；沙鸥翔集，锦鳞游泳；岸芷汀兰，郁郁青青。而或长烟一空，皓月千里，浮光跃金，静影沉璧。</p>
+        <p>渔歌互答，此乐何极！登斯楼也，则有心旷神怡，宠辱偕忘，把酒临风，其喜洋洋者矣。嗟夫！予尝求古仁人之心，或异二者之为。</p>
+        <p>不以物喜，不以己悲；居庙堂之高则忧其民，处江湖之远则忧其君。是进亦忧，退亦忧。然则何时而乐耶？其必曰：先天下之忧而忧，后天下之乐而乐乎！</p>
+        <p>噫！微斯人，吾谁与归？时六年九月十五日。此文以登楼所见发端，以迁客骚人之情为衬，终归于古仁人之心。</p>
+        <p>其文势开阖有致，前写阴雨，后写晴明，悲喜相对，而不止于景物之工。末章提出忧乐之义，遂使一楼一湖皆有精神。</p>
+        <p>读之者若只赏其句法，而不体其胸怀，则未免失其大旨。故此处保留长段文字，以观察小屏阅读时段落密度与行距关系。</p>
+      `,
+      `
+        <h2>醉翁亭记</h2>
+        <h3>环滁皆山也峰回路转有亭翼然临于泉上者醉翁亭也</h3>
+        <p>环滁皆山也。其西南诸峰，林壑尤美，望之蔚然而深秀者，琅琊也。山行六七里，渐闻水声潺潺，而泻出于两峰之间者，酿泉也。</p>
+        <p>峰回路转，有亭翼然临于泉上者，醉翁亭也。作亭者谁？山之僧智仙也。名之者谁？太守自谓也。</p>
+        <p>太守与客来饮于此，饮少辄醉，而年又最高，故自号曰醉翁也。醉翁之意不在酒，在乎山水之间也。</p>
+        <p>山水之乐，得之心而寓之酒也。若夫日出而林霏开，云归而岩穴暝，晦明变化者，山间之朝暮也。</p>
+        <p>野芳发而幽香，佳木秀而繁阴，风霜高洁，水落而石出者，山间之四时也。朝而往，暮而归，四时之景不同，而乐亦无穷也。</p>
+        <p>至于负者歌于途，行者休于树，前者呼，后者应，伛偻提携，往来而不绝者，滁人游也。临溪而渔，溪深而鱼肥。</p>
+        <p>酿泉为酒，泉香而酒洌；山肴野蔌，杂然而前陈者，太守宴也。宴酣之乐，非丝非竹，射者中，弈者胜，觥筹交错，起坐而喧哗者，众宾欢也。</p>
+      `
+    ];
+
+    function format(value) {
+      return Number(value).toFixed(1).replace(/\.0$/, "");
+    }
+
+    function getPlainTextLength() {
+      return bookPages.join("").replace(/<[^>]+>/g, "").replace(/\s+/g, "").length;
+    }
+
+    function renderPage() {
+      page.innerHTML = `
+        ${bookPages[currentPage]}
+        <div class="status">
+          <span>19:08</span>
+          <span>${currentPage + 1}/${bookPages.length}</span>
+          <span class="battery" aria-label="电量"></span>
+        </div>
+      `;
+      prevPage.disabled = currentPage === 0;
+      nextPage.disabled = currentPage === bookPages.length - 1;
+      pageMeta.textContent = `第 ${currentPage + 1} / ${bookPages.length} 页 · 样章约 ${getPlainTextLength()} 字`;
+    }
+
+    function renderHeadingTable(bodySize) {
+      const rows = Object.entries(headingRules).map(([level, rule]) => {
+        const fontPx = bodySize * rule.scale;
+        const lineHeightPx = fontPx + bodySize * rule.lineGap;
+        const beforePx = bodySize * rule.before;
+        const afterPx = bodySize * rule.after;
+        return `
+          <div class="metric-row">
+            <span class="level">${level.toUpperCase()}</span>
+            <span>${format(fontPx)}px</span>
+            <span>${format(lineHeightPx)}px</span>
+            <span>${format(beforePx)}px</span>
+            <span>${format(afterPx)}px</span>
+          </div>
+        `;
+      }).join("");
+
+      headingTable.innerHTML = `
+        <div class="metric-row is-head">
+          <span>级别</span>
+          <span>字号</span>
+          <span>行高</span>
+          <span>前距</span>
+          <span>后距</span>
+        </div>
+        ${rows}
+      `;
+    }
+
+    function renderHeadingControls() {
+      headingControls.innerHTML = Object.entries(headingRules).map(([level, rule]) => `
+        <div class="heading-control">
+          <div class="heading-control-title">
+            <span>${level.toUpperCase()}</span>
+            <span>字号 ×${rule.scale.toFixed(2)}</span>
+          </div>
+          <div class="mini-grid">
+            <div class="mini-field">
+              <label for="${level}-scale">字号倍数 <output id="${level}-scale-out">${rule.scale.toFixed(2)}</output></label>
+              <input id="${level}-scale" data-heading-level="${level}" data-heading-prop="scale" type="range" min="0.90" max="1.80" value="${rule.scale}" step="0.01">
+            </div>
+            <div class="mini-field">
+              <label for="${level}-lineGap">行距倍数 <output id="${level}-lineGap-out">${rule.lineGap.toFixed(2)}</output></label>
+              <input id="${level}-lineGap" data-heading-level="${level}" data-heading-prop="lineGap" type="range" min="0" max="0.50" value="${rule.lineGap}" step="0.01">
+            </div>
+            <div class="mini-field">
+              <label for="${level}-before">前距倍数 <output id="${level}-before-out">${rule.before.toFixed(2)}</output></label>
+              <input id="${level}-before" data-heading-level="${level}" data-heading-prop="before" type="range" min="0" max="1.50" value="${rule.before}" step="0.01">
+            </div>
+            <div class="mini-field">
+              <label for="${level}-after">后距倍数 <output id="${level}-after-out">${rule.after.toFixed(2)}</output></label>
+              <input id="${level}-after" data-heading-level="${level}" data-heading-prop="after" type="range" min="0" max="1.80" value="${rule.after}" step="0.01">
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      headingControls.querySelectorAll("input[data-heading-level]").forEach((input) => {
+        input.addEventListener("input", () => {
+          const level = input.dataset.headingLevel;
+          const prop = input.dataset.headingProp;
+          headingRules[level][prop] = Number(input.value);
+          document.getElementById(`${level}-${prop}-out`).textContent = Number(input.value).toFixed(2);
+          update();
+        });
+      });
+    }
+
+    function update() {
+      const bodySize = Number(fontSize.value);
+      const bodyLineGap = Number(lineGap.value);
+      const bodyParagraphGap = Number(paragraphGap.value);
+      const margin = Number(pageMargin.value);
+      const bodyLineHeight = bodySize * (1 + bodyLineGap);
+
+      page.style.setProperty("--body-size", `${bodySize}px`);
+      page.style.setProperty("--body-line-height", `${bodyLineHeight}px`);
+      page.style.setProperty("--paragraph-after", `${bodySize * bodyParagraphGap}px`);
+      page.style.setProperty("--text-indent", `${bodySize * textIndent}px`);
+      page.style.setProperty("--heading-align", headingAlign);
+      page.style.setProperty("--margin-top", `${bodySize * 0.38}px`);
+      page.style.setProperty("--margin-right", `${bodySize * margin}px`);
+      page.style.setProperty("--margin-bottom", `${bodySize * 0.70}px`);
+      page.style.setProperty("--margin-left", `${bodySize * margin}px`);
+
+      Object.entries(headingRules).forEach(([level, rule]) => {
+        const fontPx = bodySize * rule.scale;
+        page.style.setProperty(`--${level}-size`, `${fontPx}px`);
+        page.style.setProperty(`--${level}-line-height`, `${fontPx + bodySize * rule.lineGap}px`);
+        page.style.setProperty(`--${level}-before`, `${bodySize * rule.before}px`);
+        page.style.setProperty(`--${level}-after`, `${bodySize * rule.after}px`);
+      });
+
+      fontSizeOut.textContent = `${bodySize}px`;
+      lineGapOut.textContent = bodyLineGap.toFixed(2);
+      paragraphGapOut.textContent = bodyParagraphGap.toFixed(2);
+      pageMarginOut.textContent = `${margin.toFixed(2)}em`;
+
+      document.getElementById("fontSizeFormula").textContent = `bodyFontSize = ${bodySize}px`;
+      document.getElementById("bodyLineFormula").textContent = `bodyLineHeight = bodyFontSize × (1 + a) = ${bodySize} × (1 + ${bodyLineGap.toFixed(2)})`;
+      document.getElementById("bodyGapFormula").textContent = `paragraphSpacing = bodyFontSize × b = ${bodySize} × ${bodyParagraphGap.toFixed(2)}`;
+      document.getElementById("pageMarginFormula").textContent = `marginLeft / marginRight = bodyFontSize × m = ${bodySize} × ${margin.toFixed(2)}`;
+
+      renderHeadingTable(bodySize);
+    }
+
+    [fontSize, lineGap, paragraphGap, pageMargin].forEach((input) => {
+      input.addEventListener("input", update);
+    });
+
+    indentButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        textIndent = Number(button.dataset.indent);
+        indentButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        update();
+      });
+    });
+
+    headingAlignButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        headingAlign = button.dataset.headingAlign;
+        headingAlignButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        update();
+      });
+    });
+
+    prevPage.addEventListener("click", () => {
+      if (currentPage > 0) {
+        currentPage -= 1;
+        renderPage();
+        update();
+      }
+    });
+
+    nextPage.addEventListener("click", () => {
+      if (currentPage < bookPages.length - 1) {
+        currentPage += 1;
+        renderPage();
+        update();
+      }
+    });
+
+    renderHeadingControls();
+    renderPage();
+    update();
+  </script>
+</body>
+</html>
