@@ -482,8 +482,11 @@
             <div class="formula-note" id="bodyGapFormula"></div>
           </div>
           <div class="field">
-            <label for="pageMargin">左右页边距 <output id="pageMarginOut">0.50em</output></label>
-            <input id="pageMargin" type="range" min="0.30" max="0.90" value="0.50" step="0.05">
+            <label>页边距</label>
+            <label for="pageMarginX">左右 <output id="pageMarginXOut">0.50em</output></label>
+            <input id="pageMarginX" type="range" min="0.30" max="0.90" value="0.50" step="0.05">
+            <label for="pageMarginY">上下 <output id="pageMarginYOut">0.50em</output></label>
+            <input id="pageMarginY" type="range" min="0.20" max="1.00" value="0.50" step="0.05">
             <div class="formula-note" id="pageMarginFormula"></div>
           </div>
         </div>
@@ -525,11 +528,13 @@
     const fontSize = document.getElementById("fontSize");
     const lineGap = document.getElementById("lineGap");
     const paragraphGap = document.getElementById("paragraphGap");
-    const pageMargin = document.getElementById("pageMargin");
+    const pageMarginX = document.getElementById("pageMarginX");
+    const pageMarginY = document.getElementById("pageMarginY");
     const fontSizeOut = document.getElementById("fontSizeOut");
     const lineGapOut = document.getElementById("lineGapOut");
     const paragraphGapOut = document.getElementById("paragraphGapOut");
-    const pageMarginOut = document.getElementById("pageMarginOut");
+    const pageMarginXOut = document.getElementById("pageMarginXOut");
+    const pageMarginYOut = document.getElementById("pageMarginYOut");
     const headingTable = document.getElementById("headingTable");
     const headingControls = document.getElementById("headingControls");
     const resetHeadingRules = document.getElementById("resetHeadingRules");
@@ -809,7 +814,8 @@
       const bodySize = Number(fontSize.value);
       const bodyLineGap = Number(lineGap.value);
       const bodyParagraphGap = Number(paragraphGap.value);
-      const margin = Number(pageMargin.value);
+      const marginX = Number(pageMarginX.value);
+      const marginY = Number(pageMarginY.value);
       const bodyLineHeight = bodySize * (1 + bodyLineGap);
 
       page.style.setProperty("--body-size", `${bodySize}px`);
@@ -817,10 +823,10 @@
       page.style.setProperty("--paragraph-after", `${bodySize * bodyParagraphGap}px`);
       page.style.setProperty("--text-indent", `${bodySize * textIndent}px`);
       page.style.setProperty("--heading-align", headingAlign);
-      page.style.setProperty("--margin-top", `${bodySize * 0.38}px`);
-      page.style.setProperty("--margin-right", `${bodySize * margin}px`);
-      page.style.setProperty("--margin-bottom", `${bodySize * 0.70}px`);
-      page.style.setProperty("--margin-left", `${bodySize * margin}px`);
+      page.style.setProperty("--margin-top", `${bodySize * marginY}px`);
+      page.style.setProperty("--margin-right", `${bodySize * marginX}px`);
+      page.style.setProperty("--margin-bottom", `${bodySize * marginY}px`);
+      page.style.setProperty("--margin-left", `${bodySize * marginX}px`);
 
       Object.entries(headingRules).forEach(([level, rule]) => {
         const fontPx = bodySize * rule.scale;
@@ -833,17 +839,18 @@
       fontSizeOut.textContent = `${bodySize}px`;
       lineGapOut.textContent = bodyLineGap.toFixed(2);
       paragraphGapOut.textContent = bodyParagraphGap.toFixed(2);
-      pageMarginOut.textContent = `${margin.toFixed(2)}em`;
+      pageMarginXOut.textContent = `${marginX.toFixed(2)}em`;
+      pageMarginYOut.textContent = `${marginY.toFixed(2)}em`;
 
       document.getElementById("fontSizeFormula").textContent = `bodyFontSize = ${bodySize}px`;
       document.getElementById("bodyLineFormula").textContent = `bodyLineHeight = bodyFontSize × (1 + a) = ${bodySize} × (1 + ${bodyLineGap.toFixed(2)})`;
       document.getElementById("bodyGapFormula").textContent = `paragraphSpacing = bodyFontSize × b = ${bodySize} × ${bodyParagraphGap.toFixed(2)}`;
-      document.getElementById("pageMarginFormula").textContent = `marginLeft / marginRight = bodyFontSize × m = ${bodySize} × ${margin.toFixed(2)}`;
+      document.getElementById("pageMarginFormula").textContent = `marginLeft / marginRight = bodyFontSize × mx = ${bodySize} × ${marginX.toFixed(2)}；marginTop / marginBottom = bodyFontSize × my = ${bodySize} × ${marginY.toFixed(2)}`;
 
       renderHeadingTable(bodySize);
     }
 
-    [fontSize, lineGap, paragraphGap, pageMargin].forEach((input) => {
+    [fontSize, lineGap, paragraphGap, pageMarginX, pageMarginY].forEach((input) => {
       input.addEventListener("input", update);
     });
 
