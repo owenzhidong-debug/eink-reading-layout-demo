@@ -115,10 +115,20 @@
 
     .reader-page {
       position: absolute;
-      inset: 0;
+      left: 50%;
+      top: 50%;
+      width: 480px;
+      height: 800px;
       padding: var(--margin-top) var(--margin-right) calc(var(--margin-bottom) + 30px) var(--margin-left);
       color: #242824;
       overflow: hidden;
+      transform: translate(-50%, -50%) rotate(var(--content-rotation, 0deg));
+      transform-origin: center;
+    }
+
+    .reader-page.is-landscape {
+      width: 800px;
+      height: 480px;
     }
 
     .reader-page h1,
@@ -426,6 +436,42 @@
       font-size: 12px;
     }
 
+    .orientation-panel {
+      display: grid;
+      gap: 8px;
+    }
+
+    .orientation-button {
+      appearance: none;
+      border: 1px solid #727b73;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .orientation-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .orientation-meta span {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: rgba(255, 255, 255, 0.28);
+    }
+
     .page-meta {
       color: var(--muted);
       font-size: 13px;
@@ -540,6 +586,17 @@
       </section>
 
       <section class="card">
+        <h2>屏幕方向</h2>
+        <div class="orientation-panel">
+          <button class="orientation-button" id="orientationToggle" type="button"></button>
+          <div class="orientation-meta">
+            <span id="volumeUpAction"></span>
+            <span id="volumeDownAction"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
         <div class="card-title-row">
           <h2>标题官方映射</h2>
           <button class="secondary-button" id="resetHeadingRules" type="button">恢复默认</button>
@@ -569,6 +626,9 @@
     const headingTable = document.getElementById("headingTable");
     const headingControls = document.getElementById("headingControls");
     const resetHeadingRules = document.getElementById("resetHeadingRules");
+    const orientationToggle = document.getElementById("orientationToggle");
+    const volumeUpAction = document.getElementById("volumeUpAction");
+    const volumeDownAction = document.getElementById("volumeDownAction");
     const indentButtons = Array.from(document.querySelectorAll("[data-indent]"));
     const headingAlignButtons = Array.from(document.querySelectorAll("[data-heading-align]"));
 
@@ -583,6 +643,14 @@
     let textIndent = 0;
     let headingAlign = "center";
     let currentPage = 0;
+    let orientationIndex = 0;
+
+    const orientations = [
+      { name: "正向竖屏", rotation: 0, landscape: false, volumeUp: "上一页", volumeDown: "下一页" },
+      { name: "顺时针横屏", rotation: 90, landscape: true, volumeUp: "上一页", volumeDown: "下一页" },
+      { name: "逆向竖屏", rotation: 180, landscape: false, volumeUp: "下一页", volumeDown: "上一页" },
+      { name: "逆时针横屏", rotation: -90, landscape: true, volumeUp: "下一页", volumeDown: "上一页" }
+    ];
 
     const bookPages = [
       `
@@ -773,6 +841,15 @@
       pageMeta.textContent = `第 ${currentPage + 1} / ${bookPages.length} 页 · 样章约 ${getPlainTextLength()} 字`;
     }
 
+    function renderOrientation() {
+      const orientation = orientations[orientationIndex];
+      page.classList.toggle("is-landscape", orientation.landscape);
+      page.style.setProperty("--content-rotation", `${orientation.rotation}deg`);
+      orientationToggle.textContent = `当前：${orientation.name} · 点击切换`;
+      volumeUpAction.textContent = `音量上键：${orientation.volumeUp}`;
+      volumeDownAction.textContent = `音量下键：${orientation.volumeDown}`;
+    }
+
     function renderHeadingTable(bodySize) {
       const rows = Object.entries(headingRules).map(([level, rule]) => {
         const fontPx = bodySize * rule.scale;
@@ -909,6 +986,11 @@
       update();
     });
 
+    orientationToggle.addEventListener("click", () => {
+      orientationIndex = (orientationIndex + 1) % orientations.length;
+      renderOrientation();
+    });
+
     prevPage.addEventListener("click", () => {
       if (currentPage > 0) {
         currentPage -= 1;
@@ -927,6 +1009,7 @@
 
     renderHeadingControls();
     renderPage();
+    renderOrientation();
     update();
   </script>
 </body>
