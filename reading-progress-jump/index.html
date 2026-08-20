@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>阅读进度跳转输入原型</title>
+  <style>
+    :root {
+      --paper: #e7e7e2;
+      --ink: #1f1f1d;
+      --muted: #66665f;
+      --line: #55554f;
+      --soft-line: #9d9d95;
+      --button: #f0f0ea;
+      --button-active: #d8d8d2;
+      --primary: #242421;
+      --primary-ink: #f4f4ee;
+      --danger: #1f1f1d;
+      --disabled: #aaa9a0;
+      font-family: ui-serif, "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #c9c9c3;
+      color: var(--ink);
+    }
+
+    .stage {
+      width: min(96vw, 980px);
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.035) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,.035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 4px 4px;
+      border: 2px solid #77776f;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, .18);
+      padding: 34px;
+    }
+
+    .dialog {
+      width: min(900px, 100%);
+      min-height: 430px;
+      display: grid;
+      grid-template-columns: 1.12fr .88fr;
+      gap: 34px;
+      padding: 26px 28px;
+      background: rgba(239, 239, 232, .86);
+      border: 2px solid #707069;
+      box-shadow: 0 0 0 1px #b8b8b0 inset;
+      position: relative;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(86px, 1fr));
+      grid-template-rows: repeat(4, 1fr);
+      gap: 12px;
+      min-width: 0;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      border-radius: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .key {
+      min-height: 76px;
+      border: 2px dotted var(--soft-line);
+      background: var(--button);
+      font-size: clamp(26px, 4.2vw, 38px);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .key:active {
+      background: var(--button-active);
+    }
+
+    .panel {
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+      min-width: 0;
+      position: relative;
+      padding: 4px 0 0;
+    }
+
+    .close {
+      position: absolute;
+      top: -2px;
+      right: 0;
+      width: 52px;
+      height: 52px;
+      border: 0;
+      background: transparent;
+      font-size: 48px;
+      line-height: 1;
+      color: #393936;
+      cursor: pointer;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 4.4vw, 46px);
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .input-block {
+      align-self: center;
+    }
+
+    .readout {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 16px;
+      border-bottom: 3px solid var(--line);
+      padding: 0 0 8px;
+    }
+
+    .value {
+      min-height: 66px;
+      font-size: clamp(42px, 6.4vw, 66px);
+      line-height: .98;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .unit {
+      padding-bottom: 6px;
+      font-size: clamp(26px, 4.2vw, 42px);
+      color: #454541;
+      font-weight: 600;
+    }
+
+    .confirm {
+      width: 100%;
+      min-height: 82px;
+      border: 2px solid #1e1e1c;
+      background: var(--primary);
+      color: var(--primary-ink);
+      font-size: clamp(28px, 4.2vw, 38px);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .confirm:disabled {
+      border-color: var(--disabled);
+      background: #bebdb5;
+      color: #73736d;
+      cursor: not-allowed;
+    }
+
+    .result {
+      min-height: 28px;
+      margin-top: 14px;
+      font-size: 20px;
+      color: #33332f;
+      font-weight: 700;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%) translateY(8px);
+      max-width: calc(100% - 56px);
+      padding: 13px 22px;
+      border: 2px solid #1f1f1d;
+      background: #f4f4ee;
+      color: #1f1f1d;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 120ms ease, transform 120ms ease;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, .18);
+      z-index: 3;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .rules {
+      width: min(900px, 100%);
+      color: #3a3a36;
+      font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: rgba(239, 239, 232, .72);
+      border: 2px solid #8d8d85;
+      padding: 16px 20px 18px;
+    }
+
+    .rules h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .rules ol {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    .rules li {
+      margin: 4px 0;
+    }
+
+    @media (max-width: 760px) {
+      .stage {
+        width: 100vw;
+        min-height: 100vh;
+        padding: 16px;
+        border: 0;
+        justify-content: flex-start;
+      }
+
+      .dialog {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        min-height: auto;
+      }
+
+      .panel {
+        order: -1;
+        min-height: 260px;
+      }
+
+      .key {
+        min-height: 68px;
+      }
+
+      .rules {
+        padding: 14px 16px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" aria-label="阅读进度跳转输入模拟">
+    <section class="dialog" aria-label="跳转进度输入面板">
+      <div class="keypad" aria-label="数字键盘">
+        <button class="key" data-key="1">1</button>
+        <button class="key" data-key="2">2</button>
+        <button class="key" data-key="3">3</button>
+        <button class="key" data-key="4">4</button>
+        <button class="key" data-key="5">5</button>
+        <button class="key" data-key="6">6</button>
+        <button class="key" data-key="7">7</button>
+        <button class="key" data-key="8">8</button>
+        <button class="key" data-key="9">9</button>
+        <button class="key" data-action="clear">AC</button>
+        <button class="key" data-key="0">0</button>
+        <button class="key" data-action="delete" aria-label="删除">⌫</button>
+      </div>
+
+      <div class="panel">
+        <button class="close" data-action="reset" aria-label="恢复默认值">×</button>
+        <h1>进度</h1>
+
+        <div class="input-block">
+          <div class="readout" aria-live="polite">
+            <div class="value" id="value">73.9</div>
+            <div class="unit">%</div>
+          </div>
+        </div>
+
+        <button class="confirm" id="confirm">确认</button>
+        <div class="result" id="result" aria-live="polite"></div>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite">进度不能超过 100%</div>
+    </section>
+    <section class="rules" aria-label="产品规则">
+      <h2>产品规则</h2>
+      <ol>
+        <li>进入弹窗时，输入框默认展示当前阅读进度，本原型默认值为 73.9%。</li>
+        <li>未点击 AC 时，当前进度视为完整默认值；继续输入数字会按追加输入判断。</li>
+        <li>如果追加输入会导致进度超过 100.0%，当前进度保持不变，并 toast 提示“进度不能超过 100%”。</li>
+        <li>点击 AC 后清空输入，进入重新输入状态。</li>
+        <li>重新输入时，用户只输入数字，系统自动把最后 1 位作为小数位，例如 705 显示为 70.5%。</li>
+        <li>重新输入时，最大有效输入为 1000，对应 100.0%；超过 100.0% 的输入不生效，并出现 toast 提示。</li>
+        <li>点击删除时，按内部数字串删除最后 1 位，例如 73.9% 删除后显示 7.3%，再删除显示 0.7%，再删除为空。</li>
+        <li>输入为空时点击确认，不执行跳转，并 toast 提示“进度不能为 0”。</li>
+        <li>点击确认后，系统跳转到当前显示进度对应的位置；本原型保留面板并显示模拟跳转结果。</li>
+      </ol>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULT_PROGRESS_TENTHS = 739;
+    const MAX_PROGRESS_TENTHS = 1000;
+
+    const valueEl = document.getElementById('value');
+    const resultEl = document.getElementById('result');
+    const confirmEl = document.getElementById('confirm');
+    const toastEl = document.getElementById('toast');
+    let toastTimer = null;
+
+    const state = {
+      mode: 'default',
+      tenths: DEFAULT_PROGRESS_TENTHS,
+      buffer: ''
+    };
+
+    function formatTenths(tenths) {
+      return (tenths / 10).toFixed(1);
+    }
+
+    function currentTenths() {
+      if (state.mode === 'entry') {
+        if (!state.buffer) return null;
+        return Number(state.buffer);
+      }
+      return state.tenths;
+    }
+
+    function render() {
+      const tenths = currentTenths();
+      valueEl.textContent = tenths === null ? '' : formatTenths(tenths);
+    }
+
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 1400);
+    }
+
+    function pressDigit(digit) {
+      resultEl.textContent = '';
+
+      if (state.mode === 'default' || state.mode === 'quick') {
+        const nextBuffer = String(state.tenths) + digit;
+        const nextTenths = Number(nextBuffer);
+
+        if (nextBuffer.length > 4 || nextTenths > MAX_PROGRESS_TENTHS) {
+          showToast('进度不能超过 100%');
+          render();
+          return;
+        }
+
+        state.buffer = nextBuffer.replace(/^0+(?=\d)/, '');
+        state.mode = 'entry';
+        render();
+        return;
+      }
+
+      const nextBuffer = state.buffer + digit;
+      const nextTenths = Number(nextBuffer);
+
+      if (nextBuffer.length > 4 || nextTenths > MAX_PROGRESS_TENTHS) {
+        showToast('进度不能超过 100%');
+        render();
+        return;
+      }
+
+      state.buffer = nextBuffer.replace(/^0+(?=\d)/, '');
+      render();
+    }
+
+    function clearInput() {
+      state.mode = 'entry';
+      state.buffer = '';
+      resultEl.textContent = '';
+      render();
+    }
+
+    function deleteInput() {
+      resultEl.textContent = '';
+
+      if (state.mode !== 'entry') {
+        state.buffer = String(state.tenths);
+        state.mode = 'entry';
+      }
+
+      state.buffer = state.buffer.slice(0, -1).replace(/^0+(?=\d)/, '');
+      render();
+    }
+
+    function resetDefault() {
+      state.mode = 'default';
+      state.tenths = DEFAULT_PROGRESS_TENTHS;
+      state.buffer = '';
+      resultEl.textContent = '';
+      render();
+    }
+
+    function confirmJump() {
+      const tenths = currentTenths();
+      if (tenths === null) {
+        showToast('进度不能为 0');
+        render();
+        return;
+      }
+
+      if (tenths > MAX_PROGRESS_TENTHS) {
+        render();
+        return;
+      }
+
+      const formatted = formatTenths(tenths);
+      resultEl.textContent = `已模拟跳转到 ${formatted}%`;
+      state.mode = 'default';
+      state.tenths = tenths;
+      state.buffer = '';
+      render();
+    }
+
+    document.querySelectorAll('[data-key]').forEach((button) => {
+      button.addEventListener('click', () => pressDigit(button.dataset.key));
+    });
+
+    document.querySelector('[data-action="clear"]').addEventListener('click', clearInput);
+    document.querySelector('[data-action="delete"]').addEventListener('click', deleteInput);
+    document.querySelector('[data-action="reset"]').addEventListener('click', resetDefault);
+    confirmEl.addEventListener('click', confirmJump);
+
+    window.addEventListener('keydown', (event) => {
+      if (/^\d$/.test(event.key)) {
+        pressDigit(event.key);
+      } else if (event.key === 'Backspace') {
+        deleteInput();
+      } else if (event.key === 'Escape') {
+        resetDefault();
+      } else if (event.key === 'Enter') {
+        confirmJump();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
